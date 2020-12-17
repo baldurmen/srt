@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 
 	"github.com/iCell/srt/linter"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 const version = "0.1.0"
 
 func filesFromArgs(args cli.Args) ([]string, error) {
 	var files []string
-	for _, arg := range args {
+	for _, arg := range args.Slice() {
 		if _, err := os.Stat(arg); err != nil {
 			return nil, err
 		}
@@ -56,39 +56,38 @@ func lint(files []string, verbose bool) {
 }
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "srt"
-	app.Usage = "lint srt files"
-	app.Version = version
-	app.Authors = []cli.Author{
-		cli.Author{
-			Name:  "iCell",
-			Email: "i@icell.io",
-		},
-	}
-
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "verbose",
-			Usage: "Prints more verbose output to the console",
-		},
-	}
-
-	app.Commands = []cli.Command{
-		cli.Command{
-			Name:  "lint",
-			Usage: "lint the given files, or the files within the given directory",
-			Action: func(c *cli.Context) error {
-				files, err := filesFromArgs(c.Args())
-				if err != nil {
-					return err
-				}
-				verbose := c.GlobalBool("verbose")
-				lint(files, verbose)
-				return nil
-			},
-		},
-	}
+	app := &cli.App{
+    Name:"srt",
+    Usage: "lint srt files",
+    Version: version,
+    Authors: []*cli.Author{
+      &cli.Author{
+        Name:  "iCell",
+        Email: "i@icell.io",
+		  },
+	  },
+    Flags: []cli.Flag{
+      &cli.BoolFlag{
+        Name: "verbose",
+        Usage: "Prints more verbose output to the console",
+      },
+    },
+    Commands: []*cli.Command{
+      &cli.Command{
+        Name:  "lint",
+        Usage: "lint the given files, or the files within the given directory",
+        Action: func(c *cli.Context) error {
+          files, err := filesFromArgs(c.Args())
+          if err != nil {
+            return err
+          }
+          verbose := c.Bool("verbose")
+          lint(files, verbose)
+          return nil
+        },
+      },
+    },
+  }
 
 	err := app.Run(os.Args)
 	if err != nil {
